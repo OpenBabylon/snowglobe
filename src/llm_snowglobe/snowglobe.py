@@ -238,7 +238,17 @@ class LLM():
             if self.embed:
                 self.embeddings = langchain_openai.OpenAIEmbeddings()
 
-   
+        if self.source == "gemini":
+            # Model Source: Gemini (GCP)
+            if self.gen:
+                self.llm = langchain_openai.ChatOpenAI(
+                    model=self.model,
+                    api_key=os.getenv("GEMINI_API_KEY"),
+                    base_url="https://generativelanguage.googleapis.com/v1beta/openai/",
+                    streaming=True,
+                )
+            if self.embed:
+                self.embeddings = langchain_openai.OpenAIEmbeddings()
 
         self.bound = {}
 

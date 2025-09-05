@@ -16,14 +16,18 @@
 
 import llm_snowglobe as snowglobe
 from dotenv import load_dotenv
+
 load_dotenv()
-
-
 
 
 class AzuristanCrimsonia(snowglobe.Control):
     def __init__(self):
-        super().__init__()
+        # super().__init__()
+
+        # gemini_llm = GeminiLLM(model='gemini-2.5-flash-lite')
+        super().__init__(
+            llm=snowglobe.LLM(model="gpt-4.1-mini-2025-04-14", source="openai")
+        )
 
         goals = {
             'azuristan_dove': "Your goal is to avoid war at all costs, and to preserve the sovereignty of Azuristan if possible.",
