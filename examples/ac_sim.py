@@ -26,7 +26,8 @@ class AzuristanCrimsonia(snowglobe.Control):
 
         # gemini_llm = GeminiLLM(model='gemini-2.5-flash-lite')
         super().__init__(
-            llm=snowglobe.LLM(model="gpt-4.1-mini-2025-04-14", source="openai")
+            # llm=snowglobe.LLM(model="gpt-4.1-mini-2025-04-14", source="openai")
+            llm=snowglobe.LLM(model="gemini-2.5-flash-lite", source="gemini")
         )
 
         goals = {

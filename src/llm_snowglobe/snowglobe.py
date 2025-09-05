@@ -209,7 +209,7 @@ class LLM():
         self.gen = gen if gen is not None else True
         self.embed = embed if embed is not None else False
 
-        if not self.source in ['openai']:
+        if not self.source in ['openai', 'gemini']:
             options = read_yaml(self.menu)
             # When using the default model and standard menu path,
             # if the model is not found then auto-install it.
@@ -572,12 +572,12 @@ class Intelligent():
                     output = chain.invoke(variables)
                 else:
                     output = await chain.ainvoke(variables)
-                if self.llm.source in ['openai', 'azure']:
+                if self.llm.source in ['openai', 'azure', 'gemini']:
                     output = output.content
                 output = output.strip()
             else:
                 def handle(chunk):
-                    if self.llm.source in ['openai', 'azure']:
+                    if self.llm.source in ['openai', 'azure', 'gemini']:
                         chunk = chunk.content
                     print(chunk, end='', flush=True)
                     return chunk
