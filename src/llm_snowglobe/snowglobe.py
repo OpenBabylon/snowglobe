@@ -27,7 +27,6 @@ import sqlite3
 import watchfiles
 import numpy as np
 import platformdirs
-import transformers
 import urllib.parse
 import urllib.request
 import langchain_openai
@@ -35,7 +34,6 @@ import langchain_chroma
 import langchain.prompts
 import langchain.storage
 import langchain.retrievers
-import langchain_huggingface
 import langchain_text_splitters
 import langchain_core.documents
 import langchain_community.llms
@@ -54,18 +52,17 @@ verbose = 2
 def settings():
     s = {}
     # Standard paths
-    s['config_dir'] = platformdirs.user_config_dir('snowglobe')
-    s['cache_dir'] = platformdirs.user_cache_dir('snowglobe')
-    s['menu_file'] = 'llms.yaml'
-    s['menu_path'] = os.path.join(s['config_dir'], s['menu_file'])
+    s['config_dir'] = None #platformdirs.user_config_dir('snowglobe')
+    s['cache_dir'] = None #platformdirs.user_cache_dir('snowglobe')
+    s['menu_file'] = None #'llms.yaml'
+    s['menu_path'] = None #os.path.join(s['config_dir'], s['menu_file'])
 
     # Default model
-    s['default_source'] = 'llamacpp'
-    s['default_model'] = 'mistral-7b-openorca'
-    s['default_url'] = 'https://huggingface.co/TheBloke/Mistral-7B-OpenOrca-GGUF/resolve/main/mistral-7b-openorca.Q5_K_M.gguf'
-    s['default_file'] = os.path.basename(
-        urllib.parse.urlparse(s['default_url']).path)
-    s['default_path'] = os.path.join(s['cache_dir'], s['default_file'])
+    s['default_source'] = 'openai'
+    s['default_model'] = 'gpt-4.1-mini-2025-04-14'
+    s['default_url'] = None
+    s['default_file'] = None #os.path.basename(urllib.parse.urlparse(s['default_url']).path)
+    s['default_path'] = None # os.path.join(s['cache_dir'], s['default_file'])
     return s
 
 
@@ -90,7 +87,7 @@ def write_yaml(data, path):
 
 
 def config(menu=None, source=None, model=None, url=None, path=None,
-           update_menu=True, download_weights=True):
+           update_menu=False, download_weights=False):
     s = settings()
     menu = menu if menu is not None else s['menu_path']
     source = source if source is not None else s['default_source']
@@ -212,7 +209,7 @@ class LLM():
         self.gen = gen if gen is not None else True
         self.embed = embed if embed is not None else False
 
-        if not self.source in ['openai', 'azure']:
+        if not self.source in ['openai']:
             options = read_yaml(self.menu)
             # When using the default model and standard menu path,
             # if the model is not found then auto-install it.
@@ -241,73 +238,7 @@ class LLM():
             if self.embed:
                 self.embeddings = langchain_openai.OpenAIEmbeddings()
 
-        elif self.source == 'azure':
-
-            # Model Source: Azure OpenAI (Cloud)
-            if self.gen:
-                self.llm = langchain_openai.AzureChatOpenAI(
-                    azure_deployment=self.azure_deployment,
-                    azure_endpoint=self.azure_endpoint,
-                    api_version=self.azure_version,
-                    streaming=True,
-                )
-            if self.embed:
-                self.embeddings = langchain_openai.AzureOpenAIEmbeddings(
-                    azure_deployment=self.azure_deployment,
-                    azure_endpoint=self.azure_endpoint,
-                    api_version=self.azure_version,
-                )
-
-        elif self.source == 'llamacpp':
-
-            # Model Source: llama.cpp (Local)
-            if self.gen:
-                self.llm = langchain_community.llms.LlamaCpp(
-                    model_path=self.model_path,
-                    n_gpu_layers=-1,
-                    seed=random.randint(0, sys.maxsize),
-                    n_ctx=32768,
-                    n_batch=512,
-                    f16_kv=True,
-                    max_tokens=1000,
-                    verbose=False,
-                )
-            if self.embed:
-                self.embeddings = \
-                    langchain_community.embeddings.LlamaCppEmbeddings(
-                        model_path=self.model_path, n_gpu_layers=-1,
-                        n_batch=512, n_ctx=8192, f16_kv=True, verbose=False)
-            self.serial = True
-
-        elif self.source == 'huggingface':
-
-            # Model Source: Hugging Face (Local)
-            if self.gen:
-                model = transformers.AutoModelForCausalLM.from_pretrained(
-                    self.model_path, device_map='auto')
-                tokenizer = transformers.AutoTokenizer.from_pretrained(
-                    self.model_path, device_map='auto')
-                tokenizer.pad_token = tokenizer.eos_token
-                streamer = transformers.TextStreamer(
-                    tokenizer, skip_prompt=True, skip_special_tokens=True) \
-                    if verbose >= 1 else None
-                pipeline = transformers.pipeline(
-                    'text-generation',
-                    model=model,
-                    tokenizer=tokenizer,
-                    device_map='auto',
-                    max_new_tokens=2048,
-                    repetition_penalty=1.05,
-                    return_full_text=False,
-                    streamer=streamer,
-                    do_sample=True,
-                )
-                self.llm = langchain_huggingface.llms.HuggingFacePipeline(
-                    pipeline=pipeline)
-            if self.embed:
-                self.embeddings = \
-                    langchain_huggingface.embeddings.HuggingFaceEmbeddings(
-                        model_name=self.model_path, show_progress=True)
+   
 
         self.bound = {}
 

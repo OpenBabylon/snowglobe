@@ -15,6 +15,10 @@
 #   limitations under the License.
 
 import llm_snowglobe as snowglobe
+from dotenv import load_dotenv
+load_dotenv()
+
+
 
 
 class AzuristanCrimsonia(snowglobe.Control):
